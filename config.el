@@ -1,18 +1,20 @@
 (setq doom-theme 'doom-monokai-classic)
-;;(setq doom-theme 'doom-gruvbox)
 ;; (setq doom-theme 'doom-homage-black)
+
+;; Flexoki dark
 (custom-set-faces '(default ((t (:background "#100F0F")))))
 
 (setq doom-font(font-spec :family "Maple Mono NF" :size 14 :weight 'medium))
 
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(undecorated . t))
-(setq display-line-numbers-type 'relative)
-;;(setq-default tab-width 2)
+;;(setq display-line-numbers-type 'relative)
 
 (after! doom-modeline
   (setq doom-modeline-persp-name t)
   (setq doom-modeline-indent-info t)
+  (setq doom-modeline-icon nil)
+  (setq doom-modeline-major-mode-icon nil)
   (setq doom-modeline-modal-icon nil
         evil-normal-state-tag   (propertize "NORMAL")
         evil-emacs-state-tag    (propertize "EMACS" )
@@ -40,6 +42,8 @@
     (shell-command-to-string "wl-paste -n | tr -d \r")))
 (setq interprogram-cut-function 'wl-copy)
 (setq interprogram-paste-function 'wl-paste)
+
+(setq evil-kill-on-visual-paste nil)
 
 
 (setq org-directory "~/my-emacs/org/")
@@ -82,8 +86,10 @@
   (evil-window-decrease-height 2))
 
 (map!
- "C-l" #'+tabs:next-or-goto
- "C-h" #'+tabs:previous-or-goto
+ ;; "C-l" #'+tabs:next-or-goto
+ ;; "C-h" #'+tabs:previous-or-goto
+ "C-l" #'next-buffer
+ "C-h" #'previous-buffer
  "C-k" #'my-evil-window-increase-height
  "C-j" #'my-evil-window-decrease-height
  "C-1" #'centaur-tabs-move-current-tab-to-left
@@ -125,42 +131,6 @@
                      ))
     (evil-define-key 'normal 'global (kbd (car binding)) (cdr binding))))
 
-;; (after! evil
-;;   (evil-define-key 'normal 'global (kbd "g [") #'flycheck-previous-error)
-;;   )
-
-
-(use-package! centaur-tabs
-  :defer t
-  :hook
-  (org-mode . centaur-tabs-local-mode)
-  (eshell-mode . centaur-tabs-local-mode)
-  (term-mode . centaur-tabs-local-mode)
-  (shell-mode . centaur-tabs-local-mode)
-  (ibuffer-mode . centaur-tabs-local-mode)
-  (anaconda-mode . centaur-tabs-local-mode)
-  (wordnut-mode . centaur-tabs-local-mode)
-  (eww-mode . centaur-tabs-local-mode)
-  (dired-mode . centaur-tabs-local-mode))
-(add-hook 'dired-mode-hook (lambda () (centaur-tabs-mode t)))  ; Enable local tabs in Dired buffers
-
-(after! centaur-tabs
-  (dolist (prefix '("*Shell Command Output"
-                    "*scratch"
-                    "*eldoc"
-                    "*doom"
-                    "*vc-diff"
-                    "*Native-compile-Log"
-                    "*Async-native"
-                    "*Messages"
-                    "*EGLOT"
-                    "*elixir-ls"
-                    "*tailwind"
-                    "*Async Shell"
-                    "*compilation"
-                    "*Org"))
-    (add-to-list 'centaur-tabs-excluded-prefixes prefix)))
-
 (add-to-list '+lookup-provider-url-alist '("Perplexity AI" "https://www.perplexity.ai/search/new?q=%s"))
 (add-to-list '+lookup-provider-url-alist '("HexPM" "https://hex.pm/packages?search=%s&sort=recent_downloads"))
 (add-to-list '+lookup-provider-url-alist '("HexDocs" "https://hexdocs.pm/%s"))
@@ -170,10 +140,6 @@
 (add-to-list '+lookup-provider-url-alist '("HexDocs | Ecto"  "https://hexdocs.pm/ecto/search.html?q=%s"))
 (add-to-list '+lookup-provider-url-alist '("TailwindCSS"  "https://tailwindcss.com/docs/customizing-colors"))
 
-;; (add-hook 'python-mode-hook
-;;           (lambda ()
-;;             (setq indent-tabs-mode nil)
-;;             (setq python-indent-offset 2)))
 
 (after! lsp-mode
   (lsp-register-client
@@ -181,42 +147,6 @@
                     :multi-root t
                     :activation-fn (lsp-activate-on "elixir")
                     :server-id 'next-ls)))
-
-(after! company
-  (set-company-backend! 't '(company-files company-capf))
-  ;; (setq company-idle-delay 0.0 company-minimum-prefix-length 1)
-  )
-
-(use-package treesit-auto
-  :config
-  (global-treesit-auto-mode))
-
-(use-package elixir-ts-mode
-  :defer t
-  :mode (("\\.ex\\'" . elixir-ts-mode)
-         ("\\.exs\\'" . elixir-ts-mode)
-         ("\\.heex\\'" . heex-ts-mode))
-  :config
-  (define-derived-mode heex-ts-mode elixir-ts-mode "HEEx"
-    "A major mode for HEEx template files.")
-  )
-(use-package typescript-ts-mode
-  :defer t
-  :mode (("\\.ts\\'" . typescript-ts-mode)
-         ("\\.tsx\\'" . tsx-ts-mode)))
-
-
-(dolist (mapping
-         '(
-           ;; (typescript-mode . typescript-ts-mode)
-           ;; (js-mode . typescript-ts-mode)
-           ;; (js2-mode . typescript-ts-mode)
-           (elixir-mode . elixir-ts-mode)
-           ;; (json-mode . json-ts-mode)
-           ;; (js-json-mode . json-ts-mode)
-           ))
-  (add-to-list 'major-mode-remap-alist mapping))
-
 
 (use-package lsp-mode
   :commands lsp
@@ -233,7 +163,7 @@
   (add-to-list 'exec-path "/home/gwn/language-server/elixir-ls")
   (setq lsp-use-plists t)
   (setq read-process-output-max (* 10 1024 1024))
-  (setq gc-cons-threshold 200000000)
+  (setq gc-cons-threshold (* 50 1024 1024))
 
   :preface
   (defun lsp-booster--advice-json-parse (old-fn &rest args)
@@ -267,6 +197,81 @@
         orig-result)))
   (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
   )
+
+(setq lsp-dart-flutter-widget-guides nil)
+
+(after! company
+  (set-company-backend! 'org-mode nil)
+  (set-company-backend! 't '(company-files company-capf))
+  (setq company-idle-delay 0.1))
+
+(use-package treesit-auto
+  :config
+  (global-treesit-auto-mode))
+
+(use-package elixir-ts-mode
+  :defer t
+  :mode (("\\.ex\\'" . elixir-ts-mode)
+         ("\\.exs\\'" . elixir-ts-mode)
+         ("\\.heex\\'" . heex-ts-mode))
+  :config
+  (define-derived-mode heex-ts-mode elixir-ts-mode "HEEx"
+    "A major mode for HEEx template files.")
+  )
+(use-package typescript-ts-mode
+  :defer t
+  :mode (("\\.ts\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode)))
+
+
+(dolist (mapping
+         '(
+           ;; (typescript-mode . typescript-ts-mode)
+           ;; (js-mode . typescript-ts-mode)
+           ;; (js2-mode . typescript-ts-mode)
+           (elixir-mode . elixir-ts-mode)
+           ;; (json-mode . json-ts-mode)
+           ;; (js-json-mode . json-ts-mode)
+           ))
+  (add-to-list 'major-mode-remap-alist mapping))
+
+
+;; (after! evil
+;;   (evil-define-key 'normal 'global (kbd "g [") #'flycheck-previous-error)
+;;   )
+
+
+;; (use-package! centaur-tabs
+;;   :defer t
+;;   :hook
+;;   (org-mode . centaur-tabs-local-mode)
+;;   (eshell-mode . centaur-tabs-local-mode)
+;;   (term-mode . centaur-tabs-local-mode)
+;;   (shell-mode . centaur-tabs-local-mode)
+;;   (ibuffer-mode . centaur-tabs-local-mode)
+;;   (anaconda-mode . centaur-tabs-local-mode)
+;;   (wordnut-mode . centaur-tabs-local-mode)
+;;   (eww-mode . centaur-tabs-local-mode)
+;;   (dired-mode . centaur-tabs-local-mode))
+;; (add-hook 'dired-mode-hook (lambda () (centaur-tabs-mode t)))  ; Enable local tabs in Dired buffers
+
+;; (after! centaur-tabs
+;;   (dolist (prefix '("*Shell Command Output"
+;;                     "*scratch"
+;;                     "*eldoc"
+;;                     "*doom"
+;;                     "*vc-diff"
+;;                     "*Native-compile-Log"
+;;                     "*Async-native"
+;;                     "*Messages"
+;;                     "*EGLOT"
+;;                     "*elixir-ls"
+;;                     "*tailwind"
+;;                     "*Async Shell"
+;;                     "*compilation"
+;;                     "*Org"))
+;;     (add-to-list 'centaur-tabs-excluded-prefixes prefix)))
+
 
 ;; (use-package treesit
 ;;   :defer t
@@ -354,31 +359,3 @@
 ;;              clojure-mode))
 ;;     (add-to-list 'lsp-tailwindcss-major-modes tw-major-mode))
 ;;   (add-to-list 'lsp-language-id-configuration '(".*\\.heex$" . "html")))
-
-
-
-;; (use-package! codeium
-;;   :defer t
-;;   :config
-;;   (setq use-dialog-box nil) ;; do not use popup boxes
-
-;;   ;; if you don't want to use customize to save the api-key
-;;   ;; (setq codeium/metadata/api_key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
-
-;;   ;; use M-x codeium-diagnose to see apis/fields that would be sent to the local language server
-;;   (setq codeium-api-enabled
-;;         (lambda (api)
-;;           (memq api '(GetCompletions Heartbeat CancelRequest GetAuthToken RegisterUser auth-redirect AcceptCompletion))))
-
-;;   (defun my-codeium/document/text ()
-;;     (buffer-substring-no-properties (max (- (point) 3000) (point-min)) (min (+ (point) 1000) (point-max))))
-;;   (defun my-codeium/document/cursor_offset ()
-;;     (codeium-utf8-byte-length
-;;      (buffer-substring-no-properties (max (- (point) 3000) (point-min)) (point))))
-;;   (setq codeium/document/text 'my-codeium/document/text)
-;;   (setq codeium/document/cursor_offset 'my-codeium/document/cursor_offset))
-
-;; (defun my/codeium ()
-;;   "Decouple codeium from other completions"
-;;   (interactive)
-;;   (cape-interactive #'codeium-completion-at-point))
